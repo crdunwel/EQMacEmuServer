@@ -1147,6 +1147,15 @@ void Client::Handle_Connect_OP_ZoneEntry(const EQApplicationPacket *app)
 	database.LoadCharacterMemmedSpells(cid, &m_pp);  /* Load Character Memorized Spells */
 	database.LoadCharacterLanguages(cid, &m_pp); /* Load Character Languages */
 
+	bool deletenorent = database.NoRentExpired(GetName());
+	if (loaditems && deletenorent) {
+		// client was offline for more than 30 minutes, delete no rent items
+		// we do this here because otherwise the ServerZoneEntry_Struct below
+		// will cause characters to display in-game NO RENT weapons / visible armor
+		// that isn't actually in their inventory
+		RemoveNoRent(false); 
+	}
+
 	if (m_pp.platinum_cursor > 0 || m_pp.silver_cursor > 0 || m_pp.gold_cursor > 0 || m_pp.copper_cursor > 0) {
 		bool changed = false;
 		uint64 new_coin = 0;
@@ -1862,10 +1871,6 @@ void Client::Handle_Connect_OP_ZoneEntry(const EQApplicationPacket *app)
 				safe_delete(inst);
 			}
 		}
-
-		bool deletenorent = database.NoRentExpired(GetName());
-		if(deletenorent)
-			RemoveNoRent(false); //client was offline for more than 30 minutes, delete no rent items
 
 		RemoveDuplicateLore(false);
 		MoveSlotNotAllowed(false);
