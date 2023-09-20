@@ -2278,24 +2278,25 @@ bool Client::BindWound(uint16 bindmob_id, bool start, bool fail)
 		safe_delete(outapp);
 		return false;
 	}
-	if (bindmob->IsClient()) {
-		Client* bind_client = bindmob->CastToClient();
-		if (bind_client->IsSoloOnly()) {
-			this->Message(CC_Red, "Unable to bind target because they're SOLO only!");
-			outapp = new EQApplicationPacket(OP_Bind_Wound, sizeof(BindWound_Struct));
-			BindWound_Struct *bind_out = (BindWound_Struct *)outapp->pBuffer;
-			bind_out->type = 5; // not in zone
-			QueuePacket(outapp);
-			safe_delete(outapp);
-			return false;
-		}
-	}
 
 	if(!fail) 
 	{
 		outapp = new EQApplicationPacket(OP_Bind_Wound, sizeof(BindWound_Struct));
 		BindWound_Struct *bind_out = (BindWound_Struct *) outapp->pBuffer;
 		bind_out->to = bindmob->GetID();
+
+		if (bindmob->IsClient()) {
+			Client* bind_client = bindmob->CastToClient();
+			if (this != bind_client && bind_client->IsSoloOnly()) {
+				this->Message(CC_Red, "Unable to bind target because they're following SOLO ruleset!");
+				bind_out->type = 3;
+				QueuePacket(outapp);
+				bind_out->type = 1;
+				QueuePacket(outapp);
+				safe_delete(outapp);
+				return false;
+			}
+		}
 		// Start bind
 		if(!bindwound_timer.Enabled()) 
 		{
