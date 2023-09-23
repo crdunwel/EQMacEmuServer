@@ -184,6 +184,7 @@ public:
 	void	ClearMerchantLists();
 
 	uint8	GetZoneExpansion() { return newzone_data.expansion; }
+	bool    AllowManastoneClick();
 	uint16	GetPullLimit();
 
 	void	LoadLevelEXPMods();
@@ -312,6 +313,7 @@ public:
 
 	bool	HasCharmedNPC;
 
+
 private:
 	uint32	zoneid;
 	char*	short_name;
@@ -365,6 +367,7 @@ private:
 	QGlobalCache *qGlobals;
 	MobMovementManager* mMovementManager;
 
+	const static std::set<std::string> CLASSIC_PLANES_SHORT_NAMES;
 };
 
 #endif

@@ -37,6 +37,7 @@
 #define SPELL_RESURRECTION_EFFECTS 756
 #define SPELL_DRAGON_CHARM 841
 #define SPELL_NPC_HARM_TOUCH 929		// this is only used by a single NPC that I can see from logs (Nortlav)
+#define SPELL_MANA_CONVERT 940          // manastone click effect
 #define SPELL_CAZIC_TOUCH 982
 #define SPELL_DIMENSIONAL_RETURN 1133
 #define SPELL_CASSINDRAS_CHANT_OF_CLARITY 1287
