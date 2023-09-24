@@ -1621,7 +1621,12 @@ void Mob::AI_Process() {
 					CastToNPC()->DoClassAttacks(victim);
 			}
 			AI_EngagedCastCheck();
-		}	//end is within combat range
+			// despawn mistwalker pet after 1 round of combat
+			if (IsPet() && GetNPCTypeID() == 635) {
+				Depop();
+			}
+			//end is within combat range
+		}
 		else
 		{
 			// Target is outside of melee range

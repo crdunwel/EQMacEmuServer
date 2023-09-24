@@ -1,0 +1,1 @@
+UPDATE pets SET petcontrol=2 WHERE type="Mistwalker";
