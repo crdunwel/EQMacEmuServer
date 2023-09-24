@@ -609,7 +609,7 @@ bool Mob::DoPreCastingChecks(uint16 spell_id, CastingSlot slot, uint16 spell_tar
 		// spell blocking can be defined in the database
 		if (zone->IsSpellBlocked(spell_id, glm::vec3(GetPosition()))) {
 			const char* msg = zone->GetSpellBlockedMessage(spell_id, glm::vec3(GetPosition()));
-			if (msg)
+			if (msg && *msg != '\0')
 			{
 				Message(CC_User_SpellFailure, msg);
 				InterruptSpell(INTERRUPT_SPELL, CC_User_Spells, spell_id, false, false);

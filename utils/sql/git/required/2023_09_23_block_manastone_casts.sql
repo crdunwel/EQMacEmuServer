@@ -9,7 +9,7 @@ SELECT
     0 AS x_diff,
     0 AS y_diff,
     0 AS z_diff,
-    'Manastone unable to be used message sent to client here' AS message,
-    'Manastone internal message here' AS description
+    '' AS message,
+    'Manastone can only be used in non-plane classic zones' AS description
 FROM zone
 WHERE expansion != 1 OR long_name IN ('Plane of Hate', 'Plane of Sky', 'Plane of Fear');
