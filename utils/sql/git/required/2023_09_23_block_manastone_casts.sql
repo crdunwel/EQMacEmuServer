@@ -2,7 +2,7 @@ INSERT INTO blocked_spells (spellid, type, zoneid, x, y, z, x_diff, y_diff, z_di
 SELECT
     (SELECT id FROM spells_new WHERE id = (SELECT clickeffect FROM items WHERE name = "Manastone" LIMIT 1) LIMIT 1) AS spell_id,
     1 AS type,
-    zone.id AS zoneid,
+    zone.zoneidnumber AS zoneid,
     0 AS x,
     0 AS y,
     0 AS z,
