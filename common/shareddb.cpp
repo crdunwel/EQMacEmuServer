@@ -2,6 +2,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
+#include <functional>
+#include <vector>
 
 #if defined(_MSC_VER) && _MSC_VER >= 1800
 	#include <algorithm>
