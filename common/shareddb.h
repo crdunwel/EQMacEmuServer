@@ -137,6 +137,15 @@ protected:
 		std::unique_ptr<EQ::FixedMemoryVariableHashSet<LootDrop_Struct>> loot_drop_hash;
 		std::unique_ptr<EQ::MemoryMappedFile> base_data_mmf;
 		std::unique_ptr<EQ::MemoryMappedFile> spells_mmf;
+
+private:
+
+	struct ItemModification {
+		std::function<bool(const EQ::ItemData&)> condition;
+		std::function<void(EQ::ItemData&)> modification;
+	};
+
+	const static std::vector<ItemModification> ITEM_DB_OVERRIDES;
 };
 
 #endif /*SHAREDDB_H_*/

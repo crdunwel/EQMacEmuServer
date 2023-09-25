@@ -712,6 +712,13 @@ void SharedDatabase::LoadItems(void *data, uint32 size, int32 items, uint32 max_
 		item.min_expansion = std::stof(row[ItemField::min_expansion]);
 		item.max_expansion = std::stof(row[ItemField::max_expansion]);
 
+		// Override database values for adjustments
+	    for (const auto& mod : ITEM_DB_OVERRIDES) {
+		    if (mod.condition(item)) {
+			    mod.modification(item);
+		    }
+	    }
+
         try {
             hash.insert(item.ID, item);
         } catch(std::exception &ex) {
@@ -1850,3 +1857,15 @@ bool SharedDatabase::VerifyToken(std::string token, int& status)
 
 	return results.Success();
 }
+
+
+const std::vector<SharedDatabase::ItemModification> SharedDatabase::ITEM_DB_OVERRIDES = {
+	{
+		[](const EQ::ItemData& item) -> bool {
+			return strcmp(item.IDFile, "IT63") == 0 && item.Material == 22 && item.Slots == 4;
+		},
+		[](EQ::ItemData& item) {
+			item.Material = 0;
+		}
+	}
+};
