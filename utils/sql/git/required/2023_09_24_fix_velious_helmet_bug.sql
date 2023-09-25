@@ -1,0 +1,1 @@
+UPDATE items SET material=0 WHERE idfile="IT63" AND material=22 AND slots=4;
