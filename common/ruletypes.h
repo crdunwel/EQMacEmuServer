@@ -155,6 +155,7 @@ RULE_INT(Zone, BoatDistance, 50) //In zones where boat name is not set in the PP
 RULE_BOOL(Zone, EnableNexusPortals, true)
 RULE_INT(Zone, NexusTimer, 900000) //Nexus timer in ms. Defaults to 15 minutes.
 RULE_INT(Zone, NexusScionTimer, 900000) //Nexus timer in ms. Defaults to 15 minutes.
+RULE_BOOL(Zone, UseRoamboxForRandomSpawnLoc, true) // if a roambox is defined for a spawngroup then use it for a random spawn location within roambox
 RULE_CATEGORY_END()
 
 RULE_CATEGORY(AlKabor)

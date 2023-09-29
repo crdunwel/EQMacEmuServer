@@ -267,6 +267,27 @@ bool Spawn2::Process() {
 			Log(Logs::General, Logs::Status, "Final coords for random spawn %d is %0.2f, %0.2f, %0.2f with timer %d and var %d", spawn2_id, x, y, z, respawn_, variance_);
 		}
 
+		if (RuleB(Zone, UseRoamboxForRandomSpawnLoc) && spawn_group->roamdist) {
+			uint8 tries = 0;
+			glm::vec3 randloc(0.0, 0.0, BEST_Z_INVALID);
+
+			while (randloc.z == BEST_Z_INVALID && tries < 3) {
+				randloc.x = zone->random.Real(spawn_group->roambox[1], spawn_group->roambox[0]);
+				randloc.y = zone->random.Real(spawn_group->roambox[3], spawn_group->roambox[2]);
+				randloc.z = zone->zonemap->FindBestZ(randloc, nullptr);
+				++tries;
+			}
+
+			if (randloc.z != BEST_Z_INVALID) {
+				x = randloc.x;
+				y = randloc.y;
+				z = randloc.z;
+				Log(Logs::General, Logs::Status, "Final coords for random spawn %d is %0.2f, %0.2f, %0.2f with timer %d and var %d", spawn2_id, x, y, z, respawn_, variance_);
+			} else {
+				Log(Logs::General, Logs::Status, "Couldn't find best Z so using default spawn %d at %0.2f, %0.2f, %0.2f with timer %d and var %d", spawn2_id, x, y, z, respawn_, variance_);
+			}
+		}
+
 		glm::vec4 loc(x, y, z, FixHeading(heading));
 		int starting_wp = 0;
 		if (spawn_group->wp_spawns && grid_ > 0)
