@@ -40,6 +40,7 @@ BulkInsertManager::BulkInsertManager(const size_t _maxRecords) {
 void BulkInsertManager::writeQueueToDatabase() {
 	std::vector<std::string> statements = getSQLStatements();
 	database.TransactionBulkQueryDatabase(statements, true)
+	resetTimer();
 }
 
 std::vector<std::string> BulkInsertManager::getSQLStatements() {
@@ -92,6 +93,14 @@ std::string BulkInsertManager::createBulkInsertSQLStatement(const std::string& t
 	);
 
 	return "INSERT INTO `" + tableName + "` VALUES " + concatenatedValues + ";";
+}
+
+bool BulkInsertManager::isTimerUp() const {
+	return std::chrono::steady_clock::now() - lastResetTime >= timerDuration;
+}
+
+void BulkInsertManager::resetTimer() {
+	lastResetTime = std::chrono::steady_clock::now();
 }
 
 std::string BulkInsertManager::convertRecordToSQLValues(const Server_Speech_Struct* record) {

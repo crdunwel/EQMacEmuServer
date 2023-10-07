@@ -63,8 +63,11 @@ void WorldServer::Process()
 
 
 	if (RuleB(QueryServ, UseBulkInserts)) {
-		bulkInsertManager.setMaxRecordSize(RuleI(QueryServ, BulkInsertQueueSize))
-		if (bulkInsertManager.isQueueFull()) {
+		bulkInsertManager.setMaxRecordSize(RuleI(QueryServ, BulkInsertQueueSize));
+		if (bulkInsertManager.isTimerUp()) {
+			bulkInsertManager.writeQueueToDatabase();
+		}
+		else if (bulkInsertManager.isQueueFull()) {
 			bulkInsertManager.writeQueueToDatabase();
 		}
 	}

@@ -30,12 +30,6 @@
 #include <deque>
 #include <vector>
 
-template<typename T>
-struct DequeWithTable {
-	std::deque<T> deque;
-	std::string tableName;
-};
-
 class BulkInsertManager {
 public:
 	BulkInsertManager(const size_t _maxRecords);
@@ -47,6 +41,9 @@ public:
 
 	size_t getTotalRecordCount() { return totalRecordCount; };
 	void setMaxRecordSize(size_t size) { maxRecords = size };
+
+	bool isTimerUp() const;
+	void resetTimer();
 
 	void addServerSpeechRecord(const Server_Speech_Struct& record);
 	void addPlayerLogItemDeleteRecord(const QSPlayerLogItemDelete_Struct& record);
@@ -77,6 +74,9 @@ public:
 private:
 	size_t maxRecords;
 	size_t totalRecordCount;
+
+	std::chrono::steady_clock::time_point lastResetTime;
+	std::chrono::milliseconds timerDuration = std::chrono::milliseconds(60000);  // Default 60 seconds
 
 	std::deque<Server_Speech_Struct> serverSpeechRecords;
 	std::deque<QSPlayerLogItemDelete_Struct> playerLogItemDeleteRecords;
