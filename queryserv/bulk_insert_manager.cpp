@@ -54,8 +54,8 @@ std::vector<std::string> BulkInsertManager::getSQLStatements() {
 	addSQLInsertStatement(statements, playerTSEventsRecords, "qs_player_ts_event_log");
 	addSQLInsertStatement(statements, playerQGlobalUpdateRecords, "qs_player_qglobal_updates_log");
 	addSQLInsertStatement(statements, playerLootRecordsRecords, "qs_player_loot_records_log");
-
-	// To add more, just add a line like the ones above and ensure the deque for that type and the appropriate table name is provided.
+	// To add more, just add a line like the ones above and
+	// ensure the deque for that type and the appropriate table name is provided.
 
 	for (const auto& query : serverPacketRecords) {
 		statements.push_back(convertRecordToSQLValues(&query));

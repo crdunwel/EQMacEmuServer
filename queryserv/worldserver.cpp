@@ -61,8 +61,12 @@ void WorldServer::Process()
 	if (!Connected())
 		return;
 
-	if (bulkInsertManager.isQueueFull()) {
-		bulkInsertManager.writeQueueToDatabase();
+
+	if (RuleB(QueryServ, UseBulkInserts)) {
+		bulkInsertManager.setMaxRecordSize(RuleI(QueryServ, BulkInsertQueueSize))
+		if (bulkInsertManager.isQueueFull()) {
+			bulkInsertManager.writeQueueToDatabase();
+		}
 	}
 
 	ServerPacket *pack = 0; 
@@ -79,7 +83,7 @@ void WorldServer::Process()
 			case ServerOP_Speech: {
 				Server_Speech_Struct *SSS = (Server_Speech_Struct *)pack->pBuffer;
 				if (RuleB(QueryServ, UseBulkInserts)) {
-					bulkInsertManager.addServerSpeechRecord(*SSS)
+					bulkInsertManager.addServerSpeechRecord(*SSS);
 				} else {
 					std::string          tmp1 = SSS->from;
 					std::string          tmp2 = SSS->to;
@@ -111,7 +115,7 @@ void WorldServer::Process()
 				QSPlayerLogItemMove_Struct *QS = (QSPlayerLogItemMove_Struct*)pack->pBuffer;
 				uint32 Items = QS->char_count;
 				if (RuleB(QueryServ, UseBulkInserts)) {
-					bulkInsertManager.addPlayerLogItemMoveRecord(*QS)
+					bulkInsertManager.addPlayerLogItemMoveRecord(*QS);
 				} else {
 					database.LogPlayerItemMove(QS, Items);
 				}
