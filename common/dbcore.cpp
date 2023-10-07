@@ -59,6 +59,89 @@ void DBcore::ping() {
 	MDatabase.unlock();
 }
 
+MySQLRequestResult DBcore::TransactionBulkQueryDatabase(const std::vector<std::string>& queries, bool retryOnFailureOnce)
+{
+	LockMutex lock(&MDatabase);
+
+	// Reconnect if we are not connected before hand.
+	if (pStatus != Connected)
+		Open();
+
+	// Start the transaction
+	if (mysql_real_query(&mysql, "START TRANSACTION", strlen("START TRANSACTION")) != 0)
+	{
+		// Handle error and return result
+		return HandleQueryError("START TRANSACTION", strlen("START TRANSACTION"), retryOnFailureOnce);
+	}
+
+	for (const auto& query : queries)
+	{
+		if (mysql_real_query(&mysql, query.c_str(), query.length()) != 0)
+		{
+			// If there's an error with one of the queries, roll back the transaction.
+			mysql_real_query(&mysql, "ROLLBACK", strlen("ROLLBACK"));
+
+			// Handle error and return result
+			return HandleQueryError(query.c_str(), query.length(), retryOnFailureOnce);
+		}
+	}
+
+	// If all queries were successful, commit the transaction.
+	if (mysql_real_query(&mysql, "COMMIT", strlen("COMMIT")) != 0)
+	{
+		// Handle commit error and return result
+		return HandleQueryError("COMMIT", strlen("COMMIT"), retryOnFailureOnce);
+	}
+
+	MySQLRequestResult requestResult(res, (uint32)mysql_affected_rows(&mysql), rowCount, (uint32)mysql_field_count(&mysql), (uint32)mysql_insert_id(&mysql));
+
+	if (LogSys.log_settings[Logs::MySQLQuery].is_category_enabled == 1)
+		LogMySQLQuery("[{0}] ([{1}] rows returned)", query, rowCount, requestResult.RowCount());
+
+	return requestResult;
+}
+
+MySQLRequestResult DBcore::HandleQueryError(const char* query, uint32 querylen, bool retryOnFailureOnce)
+{
+	unsigned int errorNumber = mysql_errno(&mysql);
+
+	if (errorNumber == CR_SERVER_GONE_ERROR)
+		pStatus = Error;
+
+	// error appears to be a disconnect error, may need to try again.
+	if (errorNumber == CR_SERVER_LOST || errorNumber == CR_SERVER_GONE_ERROR)
+	{
+		if (retryOnFailureOnce)
+		{
+			LogInfo("Database Error: Lost connection, attempting to recover....");
+			MySQLRequestResult requestResult = QueryDatabase(query, querylen, false);
+
+			if (requestResult.Success())
+			{
+				LogInfo("Reconnection to database successful.");
+				return requestResult;
+			}
+		}
+
+		pStatus = Error;
+
+		auto errorBuffer = new char[MYSQL_ERRMSG_SIZE];
+		snprintf(errorBuffer, MYSQL_ERRMSG_SIZE, "#%i: %s", mysql_errno(&mysql), mysql_error(&mysql));
+
+		return MySQLRequestResult(nullptr, 0, 0, 0, 0, (uint32)mysql_errno(&mysql), errorBuffer);
+	}
+
+	auto errorBuffer = new char[MYSQL_ERRMSG_SIZE];
+	snprintf(errorBuffer, MYSQL_ERRMSG_SIZE, "#%i: %s", mysql_errno(&mysql), mysql_error(&mysql));
+
+	if (mysql_errno(&mysql) > 0 && strlen(query) > 0)
+	{
+		LogMySQLError("[{0}] [{1}]\n[{2}]", mysql_errno(&mysql), mysql_error(&mysql), query);
+	}
+
+	return MySQLRequestResult(nullptr, 0, 0, 0, 0, mysql_errno(&mysql), errorBuffer);
+}
+
 MySQLRequestResult DBcore::QueryDatabase(std::string query, bool retryOnFailureOnce)
 {
 	return QueryDatabase(query.c_str(), query.length(), retryOnFailureOnce);
@@ -146,8 +229,6 @@ void DBcore::TransactionRollback() {
 }
 
 uint32 DBcore::DoEscapeString(char* tobuf, const char* frombuf, uint32 fromlen) {
-//	No good reason to lock the DB, we only need it in the first place to check char encoding.
-//	LockMutex lock(&MDatabase);
 	return mysql_real_escape_string(&mysql, tobuf, frombuf, fromlen);
 }
 

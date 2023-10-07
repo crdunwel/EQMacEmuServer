@@ -22,6 +22,8 @@ public:
 	eStatus	GetStatus() { return pStatus; }
 	MySQLRequestResult	QueryDatabase(const char* query, uint32 querylen, bool retryOnFailureOnce = true);
 	MySQLRequestResult	QueryDatabase(std::string query, bool retryOnFailureOnce = true);
+	MySQLRequestResult TransactionBulkQueryDatabase(const std::vector<std::string>& queries, bool retryOnFailureOnce);
+	MySQLRequestResult HandleQueryError(const char* query, uint32 querylen, bool retryOnFailureOnce);
 	void TransactionBegin();
 	void TransactionCommit();
 	void TransactionRollback();

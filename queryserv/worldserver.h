@@ -20,6 +20,7 @@
 
 #include "../common/worldconn.h"
 #include "../common/eq_packet_structs.h"
+#include "bulk_insert_manager.h"
 
 class WorldServer : public WorldConnection
 {
@@ -30,6 +31,7 @@ class WorldServer : public WorldConnection
 
 	private:
 		virtual void OnConnected();
+		BulkInsertManager bulkInsertManager;
 };
 #endif
 

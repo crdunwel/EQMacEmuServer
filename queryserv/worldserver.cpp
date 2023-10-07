@@ -26,6 +26,7 @@
 #include "database.h"
 #include "queryservconfig.h"
 #include "worldserver.h"
+#include "bulk_insert_manager.h"
 #include <iomanip>
 #include <iostream>
 #include <stdarg.h>
@@ -41,9 +42,12 @@ extern Database database;
 WorldServer::WorldServer() : WorldConnection(EmuTCPConnection::packetModeQueryServ, Config->SharedKey.c_str())
 {
 	pTryReconnect = true;
+	bulkInsertManager = new BulkInsertManager(RuleI(QueryServ, BulkInsertQueueSize))
 }
 
-WorldServer::~WorldServer() {}
+WorldServer::~WorldServer() {
+	delete bulkInsertManager;
+}
 
 void WorldServer::OnConnected()
 {
@@ -56,6 +60,10 @@ void WorldServer::Process()
 	WorldConnection::Process(); 
 	if (!Connected())
 		return;
+
+	if (bulkInsertManager.isQueueFull()) {
+		bulkInsertManager.writeQueueToDatabase();
+	}
 
 	ServerPacket *pack = 0; 
 	while((pack = tcpc.PopPacket()))
@@ -70,9 +78,13 @@ void WorldServer::Process()
 			}
 			case ServerOP_Speech: {
 				Server_Speech_Struct *SSS = (Server_Speech_Struct *)pack->pBuffer;
-				std::string          tmp1 = SSS->from;
-				std::string          tmp2 = SSS->to;
-				database.LogPlayerSpeech(tmp1.c_str(), tmp2.c_str(), SSS->message, SSS->minstatus, SSS->guilddbid, SSS->type);
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addServerSpeechRecord(*SSS)
+				} else {
+					std::string          tmp1 = SSS->from;
+					std::string          tmp2 = SSS->to;
+					database.LogPlayerSpeech(tmp1.c_str(), tmp2.c_str(), SSS->message, SSS->minstatus, SSS->guilddbid, SSS->type);
+				}
 				break;
 			}
 			case ServerOP_QSPlayerLogItemDeletes: {
@@ -88,49 +100,81 @@ void WorldServer::Process()
 					Log(Logs::Detail, Logs::QSServer, "Received malformed ServerOP_QSPlayerLogItemDeletes");
 					break;
 				}
-				database.LogPlayerItemDelete(QS, Items);
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addPlayerLogItemDeleteRecord(*QS);
+				} else {
+					database.LogPlayerItemDelete(QS, Items);
+				}
 				break;
 			}
 			case ServerOP_QSPlayerLogItemMoves: {
 				QSPlayerLogItemMove_Struct *QS = (QSPlayerLogItemMove_Struct*)pack->pBuffer;
 				uint32 Items = QS->char_count;
-				database.LogPlayerItemMove(QS, Items);
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addPlayerLogItemMoveRecord(*QS)
+				} else {
+					database.LogPlayerItemMove(QS, Items);
+				}
 				break;
 			}
 			case ServerOP_QSPlayerLogMerchantTransactions: {
 				QSMerchantLogTransaction_Struct *QS = (QSMerchantLogTransaction_Struct*)pack->pBuffer;
 				uint32 Items = QS->char_count + QS->merchant_count;
-				database.LogMerchantTransaction(QS, Items);
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addMerchantLogTransactionRecord(*QS);
+				} else {
+					database.LogMerchantTransaction(QS, Items);
+				}
 				break; 
 			}
 			case ServerOP_QSPlayerAARateHourly: {
 				QSPlayerAARateHourly_Struct *QS = (QSPlayerAARateHourly_Struct*)pack->pBuffer;
 				uint32 Items = QS->charid;
-				database.LogPlayerAARateHourly(QS, Items);
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addPlayerAARateHourlyRecord(*QS);
+				} else {
+					database.LogPlayerAARateHourly(QS, Items);
+				}
 				break;
 			}
 			case ServerOP_QSPlayerAAPurchase: {
 				QSPlayerAAPurchase_Struct *QS = (QSPlayerAAPurchase_Struct*)pack->pBuffer;
 				uint32 Items = QS->charid;
-				database.LogPlayerAAPurchase(QS, Items);
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addPlayerAAPurchaseRecord(*QS);
+				} else {
+					database.LogPlayerAAPurchase(QS, Items);
+				}
 				break;
 			}
 			case ServerOP_QSPlayerTSEvents: {
 				QSPlayerTSEvents_Struct *QS = (QSPlayerTSEvents_Struct*)pack->pBuffer;
 				uint32 Items = QS->charid;
-				database.LogPlayerTSEvents(QS, Items);
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addPlayerTSEventsRecord(*QS);
+				} else {
+					database.LogPlayerTSEvents(QS, Items);
+				}
 				break;
 			}
 			case ServerOP_QSPlayerQGlobalUpdates: {
 				QSPlayerQGlobalUpdate_Struct *QS = (QSPlayerQGlobalUpdate_Struct*)pack->pBuffer;
 				uint32 Items = QS->charid;
-				database.LogPlayerQGlobalUpdates(QS, Items);
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addPlayerQGlobalUpdateRecord(*QS);
+				} else {
+					database.LogPlayerQGlobalUpdates(QS, Items);
+				}
 				break;
 			}
 			case ServerOP_QSPlayerLootRecords: {
 				QSPlayerLootRecords_struct *QS = (QSPlayerLootRecords_struct*)pack->pBuffer;
 				uint32 Items = QS->charid;
-				database.LogPlayerLootRecords(QS, Items);
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addPlayerLootRecordsRecord(*QS);
+				} else {
+					database.LogPlayerLootRecords(QS, Items);
+				}
 				break;
 			}
 			case ServerOP_QueryServGeneric: {
@@ -174,11 +218,15 @@ void WorldServer::Process()
 			}
 			case ServerOP_QSSendQuery: {
 				/* Process all packets here */
-				database.GeneralQueryReceive(pack);  
+				if (RuleB(QueryServ, UseBulkInserts)) {
+					bulkInsertManager.addRawSQLStatement(pack)
+				} else {
+					database.GeneralQueryReceive(pack);
+				}
 				break;
 			}
 		}
-	} 
+	}
 	safe_delete(pack);
 	return;
 }

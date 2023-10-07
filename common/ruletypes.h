@@ -431,6 +431,8 @@ RULE_BOOL( QueryServ, PlayerLogLoot, false) // Log Player Looting cash/Items
 RULE_BOOL( QueryServ, PlayerLogItemDesyncs, true) // Log Player item desyncs
 RULE_BOOL( QueryServ, BazaarAuditTrail, true) // Log Bazaar transactions
 RULE_INT( QueryServ, LevelAlwaysLogKills, 1) // The NPC level where player kills are always logged. Below this only possible killsteals are logged. Set to 1 to disable.
+RULE_BOOL(QueryServ, UseBulkInserts, true)
+RULE_INT(QueryServ, BulkInsertQueueSize, 100)
 RULE_CATEGORY_END()
 
 RULE_CATEGORY( Groundspawns )
