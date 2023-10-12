@@ -686,13 +686,13 @@ int Mob::CalcEleWeaponResist(int weaponDamage, int resistType, Mob *target)
 }
 
 // Checks for weapon (including ranged) immunity, and magic flagged armor (kicks, punches, bashes)
-// slot argument should be one of the following: SlotPrimary, SlotSecondary, SlotRange, SlotAmmo, SlotFeet, SlotHands
+// slot argument should be one of the following: SlotPrimary, SlotSecondary, SlotRange, SlotAmmo, SlotFeet, SlotHands, SlotArms
 bool Mob::IsImmuneToMelee(Mob* attacker, int slot)
 {
 	if (!attacker || GetInvul() || GetSpecialAbility(IMMUNE_MELEE))
 		return true;
 
-	if (slot != EQ::invslot::slotSecondary && slot != EQ::invslot::slotRange && slot != EQ::invslot::slotAmmo && slot != EQ::invslot::slotFeet && slot != EQ::invslot::slotHands)
+	if (slot != EQ::invslot::slotSecondary && slot != EQ::invslot::slotRange && slot != EQ::invslot::slotAmmo && slot != EQ::invslot::slotFeet && slot != EQ::invslot::slotHands && slot != EQ::invslot::slotArms)
 		slot = EQ::invslot::slotPrimary;
 
 	if (attacker->IsNPC() && slot != EQ::invslot::slotPrimary && slot != EQ::invslot::slotSecondary)

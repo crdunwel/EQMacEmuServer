@@ -216,13 +216,16 @@ void Mob::DoBash(Mob* defender)
 	int base = is_trained ? EQ::skills::GetSkillBaseDamage(EQ::skills::SkillBash, skill_level) : 1;
 	int hate = base;
 	bool shieldBash = false;
+	// default to arms
+	InventorySlots slot = EQ::invslot::slotArms;
 
 	if (is_trained && IsClient() && (GetClass() == WARRIOR || GetClass() == SHADOWKNIGHT || GetClass() == PALADIN || GetClass() == CLERIC))
 	{
-		CastToClient()->CheckIncreaseSkill(EQ::skills::SkillBash, GetTarget(), zone->skill_difficulty[EQ::skills::SkillBash].difficulty);
+		Client* client = CastToClient();
+		client->CheckIncreaseSkill(EQ::skills::SkillBash, GetTarget(), zone->skill_difficulty[EQ::skills::SkillBash].difficulty);
 
 		EQ::ItemInstance* item = nullptr;
-		item = CastToClient()->GetInv().GetItem(EQ::invslot::slotSecondary);
+		item = client->GetInv().GetItem(EQ::invslot::slotSecondary);
 
 		if (item)
 		{
@@ -243,11 +246,14 @@ void Mob::DoBash(Mob* defender)
 				fbMult = zone->random.Int(1, fbMult);
 				hate = base * (100 + fbMult) / 100;
 			}
+			slot = EQ::invslot::slotSecondary;
+		} else if (client->HasBashEnablingWeapon()) {
+			slot = EQ::invslot::slotPrimary;
 		}
 	}
 
 	int minDmg = 1;
-	if (defender->IsImmuneToMelee(this, shieldBash? EQ::invslot::slotSecondary : EQ::invslot::slotPrimary))
+	if (defender->IsImmuneToMelee(this, slot))
 		minDmg = DMG_INVUL;
 
 	DoSpecialAttackDamage(defender, EQ::skills::SkillBash, base, minDmg, hate, Animation::Slam);
