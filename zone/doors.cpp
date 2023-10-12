@@ -330,7 +330,13 @@ void Doors::HandleClick(Client* sender, uint8 trigger, bool floor_port)
 
 		uint32 keyneeded = GetKeyItem();
 		uint32 playerkey = key;
-		uint8 keepoffkeyring = GetNoKeyring();
+		uint8 keepoffkeyring;
+		if (RuleB(Quarm, AllKeysGoToKeyChain) && keyneeded != 0 && keyneeded != 1) {
+			keepoffkeyring = 0;
+		}
+		else {
+			keepoffkeyring = GetNoKeyring();
+		}
 		uint32 zoneid = database.GetZoneID(dest_zone);
 		float temp_x = m_Destination.x;
 		float temp_y = m_Destination.y;
@@ -438,7 +444,13 @@ bool Doors::DoorKeyCheck(Client* sender, uint32& key)
 {
 	uint32 keyneeded = GetKeyItem();
 	uint32 altkey = GetAltKeyItem();
-	uint8 keepoffkeyring = GetNoKeyring();
+	uint8 keepoffkeyring;
+	if (RuleB(Quarm, AllKeysGoToKeyChain) && keyneeded != 0 && keyneeded != 1) {
+		keepoffkeyring = 0;
+	}
+	else {
+		keepoffkeyring = GetNoKeyring();
+	}
 	uint32 haskey = 0;
 	uint32 hasaltkey = 0;
 	uint32 playerkey = 0;

@@ -241,6 +241,7 @@ RULE_REAL(Quarm, SpeedieHighSpeedThreshold, 1.1)
 RULE_REAL(Quarm, SpeedieBardSpeedThreshold, 1.3)
 RULE_INT(Quarm, MaxTradeskillCap, 200) // During Classic until late Kunark, this should remain 200.
 RULE_BOOL(Quarm, NoPlayerDamagePetPenalty, false) // During Classic through Velious, true in Luclin+
+RULE_BOOL(Quarm, AllKeysGoToKeyChain, true) // put all keys on keychain
 RULE_CATEGORY_END()
 
 RULE_CATEGORY( Map )
