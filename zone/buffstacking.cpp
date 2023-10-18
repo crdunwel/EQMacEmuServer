@@ -320,7 +320,7 @@ int Mob::FindAffectSlot(Mob *caster, uint16 spell_id, int *result_slotnum, int r
 	}
 
 	// prevent multiple invis stacking/overwriting
-	if (IsInvisSpell(spell_id))
+	if (IsInvisSpell(spell_id) && !RuleB(Quarm, AllowInvisStacking))
 	{
 		for (int i = 0; i < this->GetMaxBuffSlots(); i++)
 		{
