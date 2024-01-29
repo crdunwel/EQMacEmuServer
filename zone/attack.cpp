@@ -3287,6 +3287,7 @@ void Mob::CommonDamage(Mob* attacker, int32 &damage, const uint16 spell_id, cons
 		if (IsMezzed() && attacker) {
 			Log(Logs::Detail, Logs::Combat, "Breaking mez due to attack.");
 			BuffFadeByEffect(SE_Mez);
+			entity_list.MessageClose(this, true, 500, CC_Default, "%s was awakened by %s!", GetCleanName(), attacker->GetCleanName());
 		}
 
 		if(spell_id != SPELL_UNKNOWN && !iBuffTic) {
